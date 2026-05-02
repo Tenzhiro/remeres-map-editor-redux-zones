@@ -39,7 +39,7 @@ void NavigationController::HandleArrowKeys(MapCanvas* canvas, wxKeyEvent& event)
 	}
 
 	canvas->UpdatePositionStatus();
-	canvas->RequestLocalRefresh();
+	canvas->Refresh();
 }
 
 void NavigationController::HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& event) {
@@ -48,7 +48,7 @@ void NavigationController::HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& even
 			map_window->ResumeMinimapTrackingToCurrentView();
 		}
 		static_cast<MapWindow*>(canvas->GetParent())->ScrollRelative(int(g_settings.getFloat(Config::SCROLL_SPEED) * canvas->zoom * (event.GetX() - canvas->cursor_x)), int(g_settings.getFloat(Config::SCROLL_SPEED) * canvas->zoom * (event.GetY() - canvas->cursor_y)));
-		canvas->RequestLocalRefresh();
+		canvas->Refresh();
 	}
 }
 
@@ -97,15 +97,14 @@ void NavigationController::ChangeFloor(MapCanvas* canvas, int new_floor) {
 	int old_floor = canvas->floor;
 	canvas->floor = new_floor;
 	if (old_floor != new_floor) {
-		canvas->ClearLightVisibilityOrigin();
 		if (auto* map_window = dynamic_cast<MapWindow*>(canvas->GetParent())) {
 			map_window->ResumeMinimapTrackingToCurrentView();
 		}
 		canvas->UpdatePositionStatus();
 		g_gui.root->UpdateFloorMenu();
 		g_gui.UpdateMinimap(true);
-		canvas->RequestLocalRefresh();
 	}
+	canvas->Refresh();
 }
 
 void NavigationController::HandleWheel(MapCanvas* canvas, wxMouseEvent& event) {

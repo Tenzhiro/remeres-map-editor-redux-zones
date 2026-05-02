@@ -19,7 +19,6 @@
 #include "ui/gui_ids.h"
 #include "app/client_version.h"
 #include "app/main.h"
-#include "ui/managers/vsync_policy.h"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
@@ -292,6 +291,7 @@ void Settings::IO(IOMode mode) {
 	Bool(SHOW_EXTRA, true);
 	Bool(SHOW_SHADE, true);
 	Bool(SHOW_SPECIAL_TILES, true);
+	Bool(SHOW_ZONE_AREAS, true);
 	Bool(SHOW_SPAWNS, true);
 	Bool(SHOW_ITEMS, true);
 	Bool(HIGHLIGHT_ITEMS, false);
@@ -394,7 +394,6 @@ void Settings::IO(IOMode mode) {
 	String(TILESET_EXPORT_DIR, "");
 	Int(FRAME_RATE_LIMIT, 144);
 	Bool(SHOW_FPS_COUNTER, false);
-	Int(VSYNC_MODE, static_cast<int>(VSyncMode::On));
 	Int(ANTI_ALIASING, 0);
 	String(SCREEN_SHADER, "None");
 
@@ -469,6 +468,10 @@ void Settings::IO(IOMode mode) {
 	String(TOOLBAR_BRUSHES_LAYOUT, "");
 	String(TOOLBAR_POSITION_LAYOUT, "");
 	String(TOOLBAR_SIZES_LAYOUT, "");
+
+	// experimental
+	section("experimental");
+	Int(EXPERIMENTAL_FOG, 0);
 
 	// Missing items report (added at end to preserve enum stability)
 	section("Editor");

@@ -164,11 +164,12 @@ void GUI::SetSelectionMode() {
 	}
 
 	if (GetCurrentBrush() && GetCurrentBrush()->is<DoodadBrush>()) {
-		SetCurrentMapSecondaryMap(nullptr);
+		if (mapTab) {
+			mapTab->GetSession()->secondary_map = nullptr;
+		}
 	}
 
 	mapTab->OnSwitchEditorMode(SELECTION_MODE);
-	SyncCurrentMapCanvasPreviewState();
 }
 
 void GUI::SetDrawingMode() {
@@ -180,61 +181,25 @@ void GUI::SetDrawingMode() {
 	mapTab->OnSwitchEditorMode(DRAWING_MODE);
 
 	if (GetCurrentBrush() && GetCurrentBrush()->is<DoodadBrush>()) {
-		SetCurrentMapSecondaryMap(g_doodad_preview.GetBufferMap());
+		if (mapTab) {
+			mapTab->GetSession()->secondary_map = g_doodad_preview.GetBufferMap();
+		}
 	} else if (GetCurrentBrush() && GetCurrentBrush()->needBorders() && g_settings.getInteger(Config::USE_AUTOMAGIC)) {
 		// We'll set the map, but it might be empty until first mouse move
-		SetCurrentMapSecondaryMap(g_autoborder_preview.GetBufferMap());
+		if (mapTab) {
+			mapTab->GetSession()->secondary_map = g_autoborder_preview.GetBufferMap();
+		}
 	} else {
-		SetCurrentMapSecondaryMap(nullptr);
+		mapTab->GetSession()->secondary_map = nullptr;
 	}
-
-	SyncCurrentMapCanvasPreviewState();
 }
 
-void GUI::SetCurrentMapSecondaryMap(BaseMap* secondary_map) {
-	MapTab* mapTab = GetCurrentMapTab();
-	if (!mapTab) {
-		return;
-	}
-
-	mapTab->GetSession()->secondary_map = secondary_map;
-	SyncCurrentMapCanvasPreviewState();
-}
-
-void GUI::RefreshView(bool immediate) {
-	MapTab* current_map_tab = GetCurrentMapTab();
+void GUI::RefreshView() {
 	for (int i = 0; i < tabbook->GetTabCount(); ++i) {
-		auto* editor_tab = tabbook->GetTab(i);
-		auto* map_tab = dynamic_cast<MapTab*>(editor_tab);
-		if (!editor_tab) {
-			continue;
+		EditorTab* editorTab = tabbook->GetTab(i);
+		if (editorTab) {
+			editorTab->GetWindow()->Refresh();
 		}
-
-		if (!current_map_tab || !map_tab || map_tab->HasSameReference(current_map_tab)) {
-			if (map_tab) {
-				map_tab->GetCanvas()->RequestLocalRefresh(immediate);
-			} else {
-				editor_tab->GetWindow()->Refresh();
-			}
-		}
-	}
-}
-
-void GUI::SyncCurrentMapCanvasPreviewState() {
-	if (!tabbook) {
-		return;
-	}
-
-	for (int index = 0; index < tabbook->GetTabCount(); ++index) {
-		auto* map_tab = dynamic_cast<MapTab*>(tabbook->GetTab(index));
-		if (!map_tab) {
-			continue;
-		}
-
-		const bool hover_preview_active = IsPasting()
-			|| (map_tab->GetMode() == DRAWING_MODE && GetCurrentBrush() != nullptr)
-			|| map_tab->GetSession()->secondary_map != nullptr;
-		map_tab->GetCanvas()->SetHoverPreviewActive(hover_preview_active);
 	}
 }
 
@@ -265,11 +230,9 @@ void GUI::PreparePaste() {
 }
 void GUI::StartPasting() {
 	g_editors.StartPasting();
-	SyncCurrentMapCanvasPreviewState();
 }
 void GUI::EndPasting() {
 	g_editors.EndPasting();
-	SyncCurrentMapCanvasPreviewState();
 }
 
 bool GUI::CanUndo() {
@@ -344,7 +307,6 @@ void GUI::FitViewToMap(MapTab* mt) {
 
 void GUI::FillDoodadPreviewBuffer() {
 	g_brush_manager.FillDoodadPreviewBuffer();
-	SyncCurrentMapCanvasPreviewState();
 }
 
 void GUI::SelectBrush() {
@@ -352,7 +314,6 @@ void GUI::SelectBrush() {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
-	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 }
 bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
@@ -360,7 +321,6 @@ bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
-	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 	return changed;
 }
@@ -369,7 +329,6 @@ void GUI::SelectPreviousBrush() {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
-	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 }
 void GUI::SelectBrushInternal(Brush* brush) {
@@ -377,7 +336,6 @@ void GUI::SelectBrushInternal(Brush* brush) {
 	if (tool_options) {
 		tool_options->SetActiveBrush(GetCurrentBrush());
 	}
-	SyncCurrentMapCanvasPreviewState();
 	emitBrushChangeIfNeeded(*this);
 }
 Brush* GUI::GetCurrentBrush() const {
@@ -420,23 +378,17 @@ void GUI::SetSpawnTime(int time) {
 		tool_options->ReloadSettings();
 	}
 }
-void GUI::SetLightIntensity(int v) {
-	g_brush_manager.SetLightIntensity(std::clamp(v, 0, 255));
+void GUI::SetLightIntensity(float v) {
+	g_brush_manager.SetLightIntensity(v);
 }
-int GUI::GetLightIntensity() const {
+float GUI::GetLightIntensity() const {
 	return g_brush_manager.GetLightIntensity();
 }
 void GUI::SetAmbientLightLevel(float v) {
-	g_brush_manager.SetAmbientLightLevel(std::clamp(v, 0.0f, 1.0f));
+	g_brush_manager.SetAmbientLightLevel(v);
 }
 float GUI::GetAmbientLightLevel() const {
 	return g_brush_manager.GetAmbientLightLevel();
-}
-void GUI::SetServerLightColor(int v) {
-	g_brush_manager.SetServerLightColor(std::clamp(v, 0, 255));
-}
-int GUI::GetServerLightColor() const {
-	return g_brush_manager.GetServerLightColor();
 }
 void GUI::SetBrushSize(int nz) {
 	g_brush_manager.SetBrushSize(nz);

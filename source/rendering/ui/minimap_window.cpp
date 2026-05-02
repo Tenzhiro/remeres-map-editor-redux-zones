@@ -421,7 +421,6 @@ void MinimapCanvas::OnPaint(wxPaintEvent& event) {
 	}
 
 	SetCurrent(*m_glContext);
-	g_gl_context.ApplyVSyncIfNeeded(*this);
 
 	static bool glad_initialized = false;
 	if (!glad_initialized) {

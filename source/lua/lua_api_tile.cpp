@@ -64,6 +64,19 @@ namespace LuaAPI {
 		return items;
 	}
 
+	static sol::table getTileZoneIds(Tile* tile, sol::this_state ts) {
+		sol::state_view lua(ts);
+		sol::table ids = lua.create_table();
+		if (!tile) {
+			return ids;
+		}
+		int idx = 1;
+		for (uint16_t zid : tile->getZoneIds()) {
+			ids[idx++] = zid;
+		}
+		return ids;
+	}
+
 	// Add item to tile
 	static Item* addItemToTile(Tile* tile, int itemId, sol::optional<int> countOpt) {
 		if (!tile) {
@@ -391,6 +404,8 @@ namespace LuaAPI {
 			"isNoPvp", sol::property([](Tile* tile) { return tile && (tile->getMapFlags() & TILESTATE_NOPVP); }),
 			"isNoLogout", sol::property([](Tile* tile) { return tile && (tile->getMapFlags() & TILESTATE_NOLOGOUT); }),
 			"isPvpZone", sol::property([](Tile* tile) { return tile && (tile->getMapFlags() & TILESTATE_PVPZONE); }),
+			"isZoneBrushFlag", sol::property([](Tile* tile) { return tile && (tile->getMapFlags() & TILESTATE_ZONE_BRUSH); }),
+			"getZoneIds", [](Tile* tile, sol::this_state ts) { return getTileZoneIds(tile, ts); },
 
 			// Map flags
 			"mapFlags", sol::property([](Tile* tile) -> uint32_t { return tile ? tile->getMapFlags() : 0; }, [](Tile* tile, uint32_t flags) {

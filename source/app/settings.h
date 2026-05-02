@@ -195,6 +195,8 @@ namespace Config {
 		SHOW_TECHNICAL_ITEMS,
 		SHOW_WAYPOINTS,
 
+		EXPERIMENTAL_FOG,
+
 		SHOW_TOWNS,
 		ALWAYS_SHOW_ZONES,
 		EXT_HOUSE_SHADER,
@@ -223,7 +225,7 @@ namespace Config {
 
 		// Add new settings at the end to preserve enum ordering for persisted settings
 		SHOW_MISSING_ITEMS_WARNING,
-		VSYNC_MODE,
+		SHOW_ZONE_AREAS,
 
 		LAST,
 	};

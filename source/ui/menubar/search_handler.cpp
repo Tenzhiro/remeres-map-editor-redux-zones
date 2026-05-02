@@ -179,43 +179,51 @@ void SearchHandler::OnReplaceItems(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void SearchHandler::OnSearchForStuffOnMap(wxCommandEvent& WXUNUSED(event)) {
-	SearchItems(true, true, true, true);
+	SearchItems(true, true, true, true, false);
+}
+
+void SearchHandler::OnSearchForZonesOnMap(wxCommandEvent& WXUNUSED(event)) {
+	SearchItems(false, false, false, false, true);
 }
 
 void SearchHandler::OnSearchForUniqueOnMap(wxCommandEvent& WXUNUSED(event)) {
-	SearchItems(true, false, false, false);
+	SearchItems(true, false, false, false, false);
 }
 
 void SearchHandler::OnSearchForActionOnMap(wxCommandEvent& WXUNUSED(event)) {
-	SearchItems(false, true, false, false);
+	SearchItems(false, true, false, false, false);
 }
 
 void SearchHandler::OnSearchForContainerOnMap(wxCommandEvent& WXUNUSED(event)) {
-	SearchItems(false, false, true, false);
+	SearchItems(false, false, true, false, false);
 }
 
 void SearchHandler::OnSearchForWriteableOnMap(wxCommandEvent& WXUNUSED(event)) {
-	SearchItems(false, false, false, true);
+	SearchItems(false, false, false, true, false);
 }
 
 void SearchHandler::OnSearchForStuffOnSelection(wxCommandEvent& WXUNUSED(event)) {
-	SearchItems(true, true, true, true, true);
+	SearchItems(true, true, true, true, false, true);
+}
+
+void SearchHandler::OnSearchForZonesOnSelection(wxCommandEvent& WXUNUSED(event)) {
+	SearchItems(false, false, false, false, true, true);
 }
 
 void SearchHandler::OnSearchForUniqueOnSelection(wxCommandEvent& WXUNUSED(event)) {
-	SearchItems(true, false, false, false, true);
+	SearchItems(true, false, false, false, false, true);
 }
 
 void SearchHandler::OnSearchForActionOnSelection(wxCommandEvent& WXUNUSED(event)) {
-	SearchItems(false, true, false, false, true);
+	SearchItems(false, true, false, false, false, true);
 }
 
 void SearchHandler::OnSearchForContainerOnSelection(wxCommandEvent& WXUNUSED(event)) {
-	SearchItems(false, false, true, false, true);
+	SearchItems(false, false, true, false, false, true);
 }
 
 void SearchHandler::OnSearchForWriteableOnSelection(wxCommandEvent& WXUNUSED(event)) {
-	SearchItems(false, false, false, true, true);
+	SearchItems(false, false, false, true, false, true);
 }
 
 void SearchHandler::OnSearchForItemOnSelection(wxCommandEvent& WXUNUSED(event)) {
@@ -268,8 +276,8 @@ struct SearchResult {
 	std::string description;
 };
 
-void SearchHandler::SearchItems(bool unique, bool action, bool container, bool writable, bool onSelection /* = false*/) {
-	if (!unique && !action && !container && !writable) {
+void SearchHandler::SearchItems(bool unique, bool action, bool container, bool writable, bool zones, bool onSelection /* = false*/) {
+	if (!unique && !action && !container && !writable && !zones) {
 		return;
 	}
 
@@ -289,6 +297,7 @@ void SearchHandler::SearchItems(bool unique, bool action, bool container, bool w
 	finder.search_action = action;
 	finder.search_container = container;
 	finder.search_writeable = writable;
+	finder.search_zones = zones;
 
 	foreach_ItemOnMap(g_gui.GetCurrentMap(), finder, onSelection);
 	finder.sort();
@@ -298,7 +307,7 @@ void SearchHandler::SearchItems(bool unique, bool action, bool container, bool w
 		SearchResult res;
 		res.tile = tile;
 		res.item = item;
-		res.description = finder.desc(item).utf8_string();
+		res.description = finder.desc(tile, item).utf8_string();
 		found.push_back(res);
 	}
 

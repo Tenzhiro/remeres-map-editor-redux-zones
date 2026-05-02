@@ -47,12 +47,14 @@ namespace EditorOperations {
 			search_unique(false),
 			search_action(false),
 			search_container(false),
-			search_writeable(false) { }
+			search_writeable(false),
+			search_zones(false) { }
 
 		bool search_unique;
 		bool search_action;
 		bool search_container;
 		bool search_writeable;
+		bool search_zones;
 		std::vector<std::pair<Tile*, Item*>> found;
 
 		void operator()(Map& map, Tile* tile, Item* item, long long done) {
@@ -60,12 +62,24 @@ namespace EditorOperations {
 				g_gui.SetLoadDone((unsigned int)(100 * done / map.getTileCount()));
 			}
 			Container* container;
-			if ((search_unique && item->getUniqueID() > 0) || (search_action && item->getActionID() > 0) || (search_container && ((container = dynamic_cast<Container*>(item)) && container->getItemCount())) || (search_writeable && item->getText().length() > 0)) {
+			if ((search_zones && item->isGroundTile() && !tile->getZoneIds().empty()) || (search_unique && item->getUniqueID() > 0) || (search_action && item->getActionID() > 0) || (search_container && ((container = dynamic_cast<Container*>(item)) && container->getItemCount())) || (search_writeable && item->getText().length() > 0)) {
 				found.push_back(std::make_pair(tile, item));
 			}
 		}
 
-		wxString desc(Item* item) {
+		wxString desc(Tile* tile, Item* item) {
+			if (search_zones) {
+				wxString label = "Zone ID: ";
+				size_t remaining = tile->getZoneIds().size();
+				for (uint16_t zid : tile->getZoneIds()) {
+					label << zid;
+					if (--remaining > 0) {
+						label << "/";
+					}
+				}
+				label << " " << wxstr(item->getName());
+				return label;
+			}
 			wxString label;
 			if (search_action) {
 				if (item->getActionID() > 0) {
@@ -97,7 +111,11 @@ namespace EditorOperations {
 		}
 
 		void sort() {
-			if (search_unique && !search_action) {
+			if (search_zones) {
+				std::sort(found.begin(), found.end(), [](const std::pair<Tile*, Item*>& pair1, const std::pair<Tile*, Item*>& pair2) {
+					return pair1.first->getZoneId() < pair2.first->getZoneId();
+				});
+			} else if (search_unique && !search_action) {
 				std::sort(found.begin(), found.end(), [](const std::pair<Tile*, Item*>& pair1, const std::pair<Tile*, Item*>& pair2) {
 					const Item* item1 = pair1.second;
 					const Item* item2 = pair2.second;

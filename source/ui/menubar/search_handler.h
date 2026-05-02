@@ -14,6 +14,7 @@ public:
 
 	// Map searches
 	void OnSearchForStuffOnMap(wxCommandEvent& event);
+	void OnSearchForZonesOnMap(wxCommandEvent& event);
 	void OnSearchForUniqueOnMap(wxCommandEvent& event);
 	void OnSearchForActionOnMap(wxCommandEvent& event);
 	void OnSearchForContainerOnMap(wxCommandEvent& event);
@@ -21,6 +22,7 @@ public:
 
 	// Selection searches
 	void OnSearchForStuffOnSelection(wxCommandEvent& event);
+	void OnSearchForZonesOnSelection(wxCommandEvent& event);
 	void OnSearchForUniqueOnSelection(wxCommandEvent& event);
 	void OnSearchForActionOnSelection(wxCommandEvent& event);
 	void OnSearchForContainerOnSelection(wxCommandEvent& event);
@@ -30,7 +32,7 @@ public:
 	void OnRemoveItemOnSelection(wxCommandEvent& event);
 
 private:
-	void SearchItems(bool unique, bool action, bool container, bool writable, bool onSelection = false);
+	void SearchItems(bool unique, bool action, bool container, bool writable, bool zones, bool onSelection = false);
 
 	MainFrame* frame;
 };

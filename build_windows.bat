@@ -189,11 +189,26 @@ if defined VCPKG_ROOT (
     )
 )
 
-REM Priority 2: Common install locations
+REM Priority 2: vcpkg.exe on PATH (works when VCPKG_ROOT is unset / different shell)
+if not defined VCPKG_DIR (
+    for /f "delims=" %%e in ('where vcpkg 2^>nul') do (
+        if not defined VCPKG_DIR (
+            for %%D in ("%%~dpe.") do (
+                if exist "%%~fD\.vcpkg-root" (
+                    set "VCPKG_DIR=%%~fD"
+                    echo   Found on PATH ^(%%e^).
+                )
+            )
+        )
+    )
+)
+
+REM Priority 3: Common install locations
 if not defined VCPKG_DIR (
     for %%p in (
         "c:\vcpkg"
         "c:\src\vcpkg"
+        "e:\vcpkg"
         "%USERPROFILE%\vcpkg"
         "%USERPROFILE%\source\repos\vcpkg"
     ) do (
@@ -371,7 +386,20 @@ echo [1/3] Configuring CMake with !VS_GENERATOR!... >> "%LOG_FILE%"
 
 if not exist "!BUILD_DIR!" mkdir "!BUILD_DIR!"
 
-cmake -S "!PROJECT_ROOT!" -B "!BUILD_DIR!" -G "!VS_GENERATOR!" -A x64 "-DCMAKE_TOOLCHAIN_FILE=!VCPKG_DIR!\scripts\buildsystems\vcpkg.cmake" "-DVCPKG_TARGET_TRIPLET=x64-windows" >> "%LOG_FILE%" 2>&1
+echo %BOLD%Installing vcpkg manifest dependencies ^(triplet x64-windows^)...%RESET%
+echo [vcpkg manifest install] ... >> "%LOG_FILE%"
+"%VCPKG_DIR%\vcpkg.exe" install --triplet x64-windows --x-manifest-root="!PROJECT_ROOT!" --x-install-root="!BUILD_DIR!\vcpkg_installed" >> "%LOG_FILE%" 2>&1
+if !ERRORLEVEL! neq 0 (
+    echo.
+    echo   %RED%ERROR: vcpkg failed to install manifest dependencies.%RESET%
+    echo   See %CYAN%!LOG_FILE!%RESET% for details.
+    echo.
+    pause
+    exit /b 1
+)
+echo   %GREEN%OK%RESET% - Manifest dependencies installed.
+
+cmake -S "!PROJECT_ROOT!" -B "!BUILD_DIR!" -G "!VS_GENERATOR!" -A x64 "-DCMAKE_TOOLCHAIN_FILE=!VCPKG_DIR!\scripts\buildsystems\vcpkg.cmake" "-DVCPKG_TARGET_TRIPLET=x64-windows" "-DVCPKG_APPLOCAL_DEPS=OFF" >> "%LOG_FILE%" 2>&1
 
 if !ERRORLEVEL! neq 0 (
     echo.

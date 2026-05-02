@@ -55,6 +55,7 @@ private:
 	[[nodiscard]] bool HasPreviewBorderControl() const;
 	[[nodiscard]] bool HasLockDoorsControl() const;
 	[[nodiscard]] bool HasSpawnControls() const;
+	[[nodiscard]] bool ShouldShowZoneBrushSection() const;
 	[[nodiscard]] Brush* GetSelectedCreatureBrush() const;
 	[[nodiscard]] std::vector<Brush*> GetDefaultTools() const;
 	[[nodiscard]] wxBitmap CreateToolBitmap(const ToolButtonEntry& entry) const;
@@ -72,6 +73,8 @@ private:
 	void OnPlaceSpawnWithCreatureToggled(wxCommandEvent& event);
 	void OnSpawnTimeChanged(wxSpinEvent& event);
 	void OnSpawnSizeChanged(wxSpinEvent& event);
+	void OnZoneIdChanged(wxSpinEvent& event);
+	void OnZoneBrushToggle(wxCommandEvent& event);
 
 	Brush* active_brush = nullptr;
 	bool mutating_ui = false;
@@ -81,6 +84,7 @@ private:
 	wxGridSizer* main_tools_grid = nullptr;
 	wxStaticBoxSizer* size_sizer = nullptr;
 	wxStaticBoxSizer* other_sizer = nullptr;
+	wxStaticBoxSizer* zone_brush_section = nullptr;
 	wxPanel* thickness_panel = nullptr;
 	wxPanel* spawn_time_panel = nullptr;
 	wxCheckBox* place_spawn_with_creature_checkbox = nullptr;
@@ -101,6 +105,10 @@ private:
 	wxSpinCtrl* spawn_time_spin = nullptr;
 	wxStaticText* spawn_size_label = nullptr;
 	wxSpinCtrl* spawn_size_spin = nullptr;
+	wxPanel* zone_id_panel = nullptr;
+	wxStaticText* zone_id_label = nullptr;
+	wxSpinCtrl* zone_id_spin = nullptr;
+	wxBitmapToggleButton* zone_brush_button = nullptr;
 
 	std::vector<ToolButtonEntry> tool_buttons;
 };

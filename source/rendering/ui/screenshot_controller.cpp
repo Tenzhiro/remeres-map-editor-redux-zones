@@ -46,7 +46,7 @@ void ScreenshotController::TakeScreenshot(const wxFileName& path, const wxString
 	screenshot_saver->PrepareCapture(screensize_x, screensize_y);
 
 	// Draw the window
-	canvas->RequestLocalRefresh();
+	canvas->Refresh();
 	canvas->Update(); // Forces immediate redraws the window.
 
 	// Buffer should now contain the screenbuffer
@@ -64,7 +64,7 @@ void ScreenshotController::TakeScreenshot(const wxFileName& path, const wxString
 		g_gui.SetStatusText(result);
 	}
 
-	canvas->RequestLocalRefresh();
+	canvas->Refresh();
 
 	screenshot_saver->Cleanup();
 }

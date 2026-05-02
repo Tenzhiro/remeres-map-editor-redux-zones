@@ -1,10 +1,7 @@
 #include "app/main.h"
 #include "ui/gui.h"
 #include "rendering/core/drawing_options.h"
-#include "rendering/core/light_defaults.h"
 #include "rendering/postprocess/post_process_manager.h"
-
-#include <algorithm>
 
 DrawingOptions::DrawingOptions() {
 	SetDefault();
@@ -31,6 +28,7 @@ void DrawingOptions::SetDefault() {
 	show_houses = true;
 	show_shade = true;
 	show_special_tiles = true;
+	show_zone_areas = true;
 	show_items = true;
 
 	highlight_items = false;
@@ -44,12 +42,9 @@ void DrawingOptions::SetDefault() {
 	show_hooks = false;
 	hide_items_when_zoomed = true;
 	current_house_id = 0;
-	draw_floor_shadow = show_shade;
-	server_light = SpriteLight {
-		.intensity = rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY,
-		.color = rme::lighting::DEFAULT_SERVER_LIGHT_COLOR
-	};
-	minimum_ambient_light = rme::lighting::DEFAULT_MINIMUM_AMBIENT_LIGHT;
+	light_intensity = 1.0f;
+	ambient_light_level = 0.5f;
+	global_light_color = wxColor(128, 128, 128);
 	highlight_pulse = 0.0f;
 	anti_aliasing = false;
 	screen_shader_name = ShaderNames::NONE;
@@ -76,6 +71,7 @@ void DrawingOptions::SetIngame() {
 	show_houses = false;
 	show_shade = false;
 	show_special_tiles = false;
+	show_zone_areas = false;
 	show_items = true;
 
 	highlight_items = false;
@@ -89,12 +85,6 @@ void DrawingOptions::SetIngame() {
 	show_hooks = false;
 	hide_items_when_zoomed = false;
 	current_house_id = 0;
-	draw_floor_shadow = show_shade;
-	server_light = SpriteLight {
-		.intensity = rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY,
-		.color = rme::lighting::DEFAULT_SERVER_LIGHT_COLOR
-	};
-	minimum_ambient_light = rme::lighting::DEFAULT_MINIMUM_AMBIENT_LIGHT;
 }
 
 #include "app/settings.h"
@@ -117,6 +107,7 @@ void DrawingOptions::Update() {
 	show_houses = g_settings.getBoolean(Config::SHOW_HOUSES);
 	show_shade = g_settings.getBoolean(Config::SHOW_SHADE);
 	show_special_tiles = g_settings.getBoolean(Config::SHOW_SPECIAL_TILES);
+	show_zone_areas = g_settings.getBoolean(Config::SHOW_ZONE_AREAS);
 	show_items = g_settings.getBoolean(Config::SHOW_ITEMS);
 	highlight_items = g_settings.getBoolean(Config::HIGHLIGHT_ITEMS);
 	highlight_locked_doors = g_settings.getBoolean(Config::HIGHLIGHT_LOCKED_DOORS);
@@ -131,17 +122,14 @@ void DrawingOptions::Update() {
 	show_towns = g_settings.getBoolean(Config::SHOW_TOWNS);
 	always_show_zones = g_settings.getBoolean(Config::ALWAYS_SHOW_ZONES);
 	extended_house_shader = g_settings.getBoolean(Config::EXT_HOUSE_SHADER);
-	server_light = SpriteLight {
-		.intensity = static_cast<uint8_t>(std::clamp(g_gui.GetLightIntensity(), 0, 255)),
-		.color = static_cast<uint8_t>(std::clamp(g_gui.GetServerLightColor(), 0, 255))
-	};
-	minimum_ambient_light = std::clamp(g_gui.GetAmbientLightLevel(), 0.0f, 1.0f);
-	draw_floor_shadow = show_shade;
+	light_intensity = g_gui.GetLightIntensity();
+	ambient_light_level = g_gui.GetAmbientLightLevel();
 
+	experimental_fog = g_settings.getBoolean(Config::EXPERIMENTAL_FOG);
 	anti_aliasing = g_settings.getBoolean(Config::ANTI_ALIASING);
 	screen_shader_name = g_settings.getString(Config::SCREEN_SHADER);
 }
 
 bool DrawingOptions::isDrawLight() const noexcept {
-	return show_lights && minimum_ambient_light < 1.0f;
+	return show_lights;
 }

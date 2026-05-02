@@ -23,8 +23,16 @@ public:
 	int getLookID() const override;
 	std::string getName() const override;
 
+	void setZoneId(uint16_t id) {
+		zoneId = id;
+	}
+	[[nodiscard]] uint16_t getZoneId() const {
+		return zoneId;
+	}
+
 protected:
 	uint32_t flag;
+	uint16_t zoneId = 0;
 };
 
 #endif

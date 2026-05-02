@@ -60,12 +60,14 @@ class CreatureNameDrawer;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 class LuaOverlayDrawer;
+class ZoneLabelDrawer;
 
 class MapDrawer {
 	MapCanvas* canvas;
 	Editor& editor;
 	DrawingOptions options;
 	RenderView view;
+	ViewBounds last_zone_label_bounds;
 	std::shared_ptr<LightDrawer> light_drawer;
 	LightBuffer light_buffer;
 	std::unique_ptr<TooltipDrawer> tooltip_drawer;
@@ -88,8 +90,8 @@ class MapDrawer {
 	std::unique_ptr<HookIndicatorDrawer> hook_indicator_drawer;
 	std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
 	std::unique_ptr<LuaOverlayDrawer> lua_overlay_drawer;
+	std::unique_ptr<ZoneLabelDrawer> zone_label_drawer;
 	std::unique_ptr<SpriteBatch> sprite_batch;
-	SpriteBatch hidden_floor_light_batch;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 
 	// Post-processing
@@ -132,6 +134,7 @@ public:
 	void DrawDoorIndicators(NVGcontext* vg);
 	void ClearFrameOverlays();
 	void DrawCreatureNames(NVGcontext* vg);
+	void DrawZoneLabels(NVGcontext* vg);
 
 	void DrawLight();
 
@@ -161,7 +164,7 @@ public:
 	}
 
 private:
-	void DrawMapLayer(SpriteBatch& batch, int map_z, bool live_client, bool light_collection_only = false);
+	void DrawMapLayer(int map_z, bool live_client);
 	bool renderers_initialized = false;
 };
 

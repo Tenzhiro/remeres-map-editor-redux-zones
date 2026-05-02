@@ -180,6 +180,7 @@ std::unique_ptr<Tile> Tile::deepCopy() const {
 	copy->mapflags = mapflags;
 	copy->statflags = statflags;
 	copy->minimapColor = minimapColor;
+	copy->setZoneIds(this);
 	if (invalidZones) {
 		copy->invalidZones = std::make_unique<InvalidZoneState>(*invalidZones);
 	}
@@ -211,6 +212,8 @@ uint32_t Tile::memsize() const {
 			mem += preservedNodeHeapSize(node);
 		}
 	}
+
+	mem += static_cast<uint32_t>(zoneIds.capacity() * sizeof(uint16_t));
 
 	return mem;
 }
@@ -481,6 +484,10 @@ bool Tile::isContentEqual(const Tile* other) const {
 		return false;
 	}
 	if (invalidZones && other->invalidZones && *invalidZones != *other->invalidZones) {
+		return false;
+	}
+
+	if (zoneIds != other->zoneIds) {
 		return false;
 	}
 

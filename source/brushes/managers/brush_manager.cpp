@@ -16,7 +16,6 @@
 #include "map/basemap.h"
 #include "ui/gui.h"
 #include "ui/main_toolbar.h"
-#include "rendering/core/light_defaults.h"
 #include <algorithm>
 #include <array>
 
@@ -40,6 +39,7 @@ BrushManager::BrushManager() :
 	rook_brush(nullptr),
 	nolog_brush(nullptr),
 	pvp_brush(nullptr),
+	zone_brush(nullptr),
 
 	current_brush(nullptr),
 	previous_brush(nullptr),
@@ -53,9 +53,8 @@ BrushManager::BrushManager() :
 	draw_locked_doors(false),
 	use_custom_thickness(false),
 	custom_thickness_mod(0.0),
-	light_intensity(rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY),
-	ambient_light_level(rme::lighting::DEFAULT_MINIMUM_AMBIENT_LIGHT),
-	server_light_color(rme::lighting::DEFAULT_SERVER_LIGHT_COLOR) {
+	light_intensity(1.0f),
+	ambient_light_level(0.5f) {
 }
 
 BrushManager::~BrushManager() {
@@ -114,7 +113,9 @@ void BrushManager::SelectBrushInternal(Brush* brush) {
 	if (brush->is<DoodadBrush>()) {
 		UpdateDoodadPreview();
 	} else {
-		g_gui.SetCurrentMapSecondaryMap(nullptr);
+		if (mapTab) {
+			mapTab->GetSession()->secondary_map = nullptr;
+		}
 		g_doodad_preview.Clear();
 	}
 
@@ -150,6 +151,7 @@ void BrushManager::Clear() {
 	rook_brush = nullptr;
 	nolog_brush = nullptr;
 	pvp_brush = nullptr;
+	zone_brush = nullptr;
 }
 
 BrushShape BrushManager::GetBrushShape() const {
@@ -190,7 +192,10 @@ void BrushManager::SetBrushSizeInternal(int nz) {
 		exact_brush_size = false;
 		aspect_ratio_locked = true;
 		g_doodad_preview.FillBuffer();
-		g_gui.SetCurrentMapSecondaryMap(g_doodad_preview.GetBufferMap());
+		MapTab* mapTab = g_gui.GetCurrentMapTab();
+		if (mapTab) {
+			mapTab->GetSession()->secondary_map = g_doodad_preview.GetBufferMap();
+		}
 	} else {
 		brush_size_x = normalized_size;
 		brush_size_y = normalized_size;
@@ -384,5 +389,8 @@ void BrushManager::FillDoodadPreviewBuffer() {
 }
 void BrushManager::UpdateDoodadPreview() {
 	g_doodad_preview.FillBuffer();
-	g_gui.SetCurrentMapSecondaryMap(g_doodad_preview.GetBufferMap());
+	MapTab* mapTab = g_gui.GetCurrentMapTab();
+	if (mapTab) {
+		mapTab->GetSession()->secondary_map = g_doodad_preview.GetBufferMap();
+	}
 }

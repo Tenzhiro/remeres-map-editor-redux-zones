@@ -15,6 +15,7 @@
 #include "palette/palette_window.h"
 #include "rendering/core/game_sprite.h"
 #include "ui/gui.h"
+#include "ui/gui_ids.h"
 #include "util/image_manager.h"
 
 #include <algorithm>
@@ -170,6 +171,48 @@ void ToolOptionsSurface::BuildUi() {
 	other_sizer->Add(lock_doors_checkbox, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(6));
 	main_sizer->Add(other_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(4));
 
+	zone_brush_section = newd wxStaticBoxSizer(wxVERTICAL, this, "Zone Brush Tool");
+	{
+		auto* zbox = zone_brush_section->GetStaticBox();
+		auto* zone_tool_row = newd wxBoxSizer(wxHORIZONTAL);
+		const wxBitmap zone_tool_bitmap =
+			IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_2_SMALL, FromDIP(wxSize(BRUSH_ICON_SIZE, BRUSH_ICON_SIZE)));
+		// Match main Tool Options brush toggles (RebuildToolButtons): wxBU_EXACTFIT only — wxBU_AUTODRAW
+		// prevents normal wxBitmapToggleButton pressed/checked chrome on Windows.
+		zone_brush_button = newd wxBitmapToggleButton(
+			zbox,
+			TOOL_OPTIONS_ZONE_BRUSH_BUTTON,
+			zone_tool_bitmap,
+			wxDefaultPosition,
+			FromDIP(wxSize(TOOL_BUTTON_SIZE, TOOL_BUTTON_SIZE)),
+			wxBU_EXACTFIT);
+		zone_brush_button->SetMinSize(FromDIP(wxSize(TOOL_BUTTON_SIZE, TOOL_BUTTON_SIZE)));
+		zone_brush_button->SetMaxSize(FromDIP(wxSize(TOOL_BUTTON_SIZE, TOOL_BUTTON_SIZE)));
+		zone_brush_button->SetToolTip("Select zone brush. Paint adds this ID; hold Ctrl while painting to remove this ID from tiles.");
+
+		zone_id_panel = newd wxPanel(zbox, wxID_ANY);
+		auto* zone_id_row = newd wxBoxSizer(wxHORIZONTAL);
+		zone_id_label = newd wxStaticText(zone_id_panel, wxID_ANY, "ID");
+		zone_id_row->Add(zone_id_label, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(8));
+		zone_id_spin = newd wxSpinCtrl(
+			zone_id_panel,
+			TOOL_OPTIONS_ZONE_BRUSH_ID,
+			wxEmptyString,
+			wxDefaultPosition,
+			FromDIP(wxSize(88, -1)),
+			wxSP_ARROW_KEYS,
+			0,
+			65535,
+			1);
+		zone_id_row->Add(zone_id_spin, 0, wxALIGN_CENTER_VERTICAL);
+		zone_id_panel->SetSizer(zone_id_row);
+
+		zone_tool_row->Add(zone_brush_button, 0, wxALIGN_CENTER_VERTICAL);
+		zone_tool_row->Add(zone_id_panel, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, FromDIP(10));
+		zone_brush_section->Add(zone_tool_row, 0, wxEXPAND | wxALL, FromDIP(6));
+	}
+	main_sizer->Add(zone_brush_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(4));
+
 	SetSizer(main_sizer);
 
 	size_x_slider->Bind(wxEVT_SLIDER, &ToolOptionsSurface::OnSizeXChanged, this);
@@ -182,6 +225,8 @@ void ToolOptionsSurface::BuildUi() {
 	place_spawn_with_creature_checkbox->Bind(wxEVT_CHECKBOX, &ToolOptionsSurface::OnPlaceSpawnWithCreatureToggled, this);
 	spawn_time_spin->Bind(wxEVT_SPINCTRL, &ToolOptionsSurface::OnSpawnTimeChanged, this);
 	spawn_size_spin->Bind(wxEVT_SPINCTRL, &ToolOptionsSurface::OnSpawnSizeChanged, this);
+	zone_id_spin->Bind(wxEVT_SPINCTRL, &ToolOptionsSurface::OnZoneIdChanged, this);
+	zone_brush_button->Bind(wxEVT_TOGGLEBUTTON, &ToolOptionsSurface::OnZoneBrushToggle, this);
 }
 
 void ToolOptionsSurface::SetPaletteType(PaletteType type) {
@@ -321,9 +366,16 @@ void ToolOptionsSurface::RefreshFromState() {
 	spawn_time_spin->SetValue(std::max(MIN_SPAWN_TIME, g_settings.getInteger(Config::DEFAULT_SPAWNTIME)));
 	spawn_size_spin->SetRange(1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS));
 	spawn_size_spin->SetValue(std::clamp(g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS), 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS)));
+	if (g_brush_manager.zone_brush) {
+		zone_id_spin->SetValue(static_cast<int>(g_brush_manager.zone_brush->getZoneId()));
+	}
 	UpdateSizeLabels();
 	UpdateModeButtons();
 	thickness_value->SetLabel(std::format("{}%", thickness_slider->GetValue()));
+	if (zone_brush_button && g_brush_manager.zone_brush) {
+		// Do not call SetBitmap every refresh: on MSW that can reset wxBitmapToggleButton checked visuals.
+		zone_brush_button->SetValue(active_brush == g_brush_manager.zone_brush);
+	}
 	SyncToolSelection();
 	SetMutatingUi(false);
 
@@ -339,6 +391,7 @@ void ToolOptionsSurface::UpdateSectionVisibility() {
 	const bool show_lock_doors = HasLockDoorsControl();
 	const bool show_spawn_controls = HasSpawnControls();
 	const bool show_other = show_thickness || show_preview_border || show_lock_doors || show_spawn_controls;
+	const bool show_zone_section = ShouldShowZoneBrushSection();
 
 	main_sizer->Show(main_tools_sizer, show_tools, true);
 	main_sizer->Show(size_sizer, show_size, true);
@@ -367,6 +420,7 @@ void ToolOptionsSurface::UpdateSectionVisibility() {
 	}
 
 	main_sizer->Show(other_sizer, show_other, true);
+	main_sizer->Show(zone_brush_section, show_zone_section, true);
 	other_sizer->Layout();
 	main_sizer->Layout();
 }
@@ -447,6 +501,10 @@ bool ToolOptionsSurface::HasLockDoorsControl() const {
 
 bool ToolOptionsSurface::HasSpawnControls() const {
 	return IsCreatureToolMode();
+}
+
+bool ToolOptionsSurface::ShouldShowZoneBrushSection() const {
+	return !IsCreatureToolMode() && g_brush_manager.zone_brush != nullptr;
 }
 
 Brush* ToolOptionsSurface::GetSelectedCreatureBrush() const {
@@ -678,4 +736,28 @@ void ToolOptionsSurface::OnSpawnSizeChanged(wxSpinEvent& event) {
 	}
 
 	g_gui.SetBrushSize(event.GetPosition());
+}
+
+void ToolOptionsSurface::OnZoneIdChanged(wxSpinEvent& WXUNUSED(event)) {
+	if (IsMutatingUi() || !g_brush_manager.zone_brush) {
+		return;
+	}
+
+	g_brush_manager.zone_brush->setZoneId(static_cast<uint16_t>(zone_id_spin->GetValue()));
+}
+
+void ToolOptionsSurface::OnZoneBrushToggle(wxCommandEvent& event) {
+	if (IsMutatingUi() || !g_brush_manager.zone_brush) {
+		return;
+	}
+
+	if (event.IsChecked()) {
+		active_brush = g_brush_manager.zone_brush;
+		g_gui.SelectBrush(g_brush_manager.zone_brush);
+		g_gui.SetStatusText(std::format("Selected Tool: {}", g_brush_manager.zone_brush->getName()));
+	} else if (g_brush_manager.eraser) {
+		g_gui.SelectBrush(g_brush_manager.eraser);
+		g_gui.SetStatusText("Selected Tool: Eraser (Clear tile content)");
+	}
+	SyncToolSelection();
 }

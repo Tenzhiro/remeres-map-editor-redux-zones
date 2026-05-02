@@ -48,11 +48,13 @@ namespace MenuBar {
 		FIND_ITEM,
 		REPLACE_ITEMS,
 		SEARCH_ON_MAP_EVERYTHING,
+		SEARCH_ON_MAP_ZONES,
 		SEARCH_ON_MAP_UNIQUE,
 		SEARCH_ON_MAP_ACTION,
 		SEARCH_ON_MAP_CONTAINER,
 		SEARCH_ON_MAP_WRITEABLE,
 		SEARCH_ON_SELECTION_EVERYTHING,
+		SEARCH_ON_SELECTION_ZONES,
 		SEARCH_ON_SELECTION_UNIQUE,
 		SEARCH_ON_SELECTION_ACTION,
 		SEARCH_ON_SELECTION_CONTAINER,
@@ -116,6 +118,7 @@ namespace MenuBar {
 		SHOW_CREATURES,
 		SHOW_SPAWNS,
 		SHOW_SPECIAL,
+		SHOW_ZONE_AREAS,
 		SHOW_AS_MINIMAP,
 		SHOW_ONLY_COLORS,
 		SHOW_ONLY_MODIFIED,
@@ -169,6 +172,8 @@ namespace MenuBar {
 		SCRIPTS_MANAGER,
 		SCRIPTS_OPEN_FOLDER,
 		SCRIPTS_RELOAD,
+
+		EXPERIMENTAL_FOG,
 	};
 }
 
@@ -228,11 +233,13 @@ public:
 	void OnSearchForItem(wxCommandEvent& event);
 	void OnReplaceItems(wxCommandEvent& event);
 	void OnSearchForStuffOnMap(wxCommandEvent& event);
+	void OnSearchForZonesOnMap(wxCommandEvent& event);
 	void OnSearchForUniqueOnMap(wxCommandEvent& event);
 	void OnSearchForActionOnMap(wxCommandEvent& event);
 	void OnSearchForContainerOnMap(wxCommandEvent& event);
 	void OnSearchForWriteableOnMap(wxCommandEvent& event);
 	void OnSearchForStuffOnSelection(wxCommandEvent& event);
+	void OnSearchForZonesOnSelection(wxCommandEvent& event);
 	void OnSearchForUniqueOnSelection(wxCommandEvent& event);
 	void OnSearchForActionOnSelection(wxCommandEvent& event);
 	void OnSearchForContainerOnSelection(wxCommandEvent& event);

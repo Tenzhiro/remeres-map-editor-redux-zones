@@ -303,6 +303,10 @@ void MainMenuBar::OnSearchForStuffOnMap(wxCommandEvent& event) {
 	searchHandler->OnSearchForStuffOnMap(event);
 }
 
+void MainMenuBar::OnSearchForZonesOnMap(wxCommandEvent& event) {
+	searchHandler->OnSearchForZonesOnMap(event);
+}
+
 void MainMenuBar::OnSearchForUniqueOnMap(wxCommandEvent& event) {
 	searchHandler->OnSearchForUniqueOnMap(event);
 }
@@ -321,6 +325,10 @@ void MainMenuBar::OnSearchForWriteableOnMap(wxCommandEvent& event) {
 
 void MainMenuBar::OnSearchForStuffOnSelection(wxCommandEvent& event) {
 	searchHandler->OnSearchForStuffOnSelection(event);
+}
+
+void MainMenuBar::OnSearchForZonesOnSelection(wxCommandEvent& event) {
+	searchHandler->OnSearchForZonesOnSelection(event);
 }
 
 void MainMenuBar::OnSearchForUniqueOnSelection(wxCommandEvent& event) {

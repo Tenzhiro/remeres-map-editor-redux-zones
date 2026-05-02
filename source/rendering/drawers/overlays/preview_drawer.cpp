@@ -13,6 +13,8 @@
 #include "editor/copybuffer.h"
 #include "editor/editor.h"
 #include "ui/map_tab.h"
+#include "map/tile.h"
+#include "rendering/drawers/tiles/tile_color_calculator.h"
 
 PreviewDrawer::PreviewDrawer() {
 }
@@ -89,6 +91,9 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 						}
 						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOPVP) {
 							g /= 2;
+						}
+						if (options.show_zone_areas && (tile->getMapFlags() & TILESTATE_ZONE_BRUSH) && !tile->getZoneIds().empty()) {
+							TileColorCalculator::BlendGameplayZoneTint(r, g, b, tile->getZoneIds());
 						}
 						if (tile->ground) {
 							BlitItemParams params(tile, tile->ground.get(), options);

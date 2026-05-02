@@ -34,6 +34,7 @@ class House;
 class Map;
 #include "app/rme_forward_declarations.h"
 #include <unordered_set>
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -48,6 +49,7 @@ enum {
 	TILESTATE_NOLOGOUT = 0x0008,
 	TILESTATE_PVPZONE = 0x0010,
 	TILESTATE_REFRESH = 0x0020,
+	TILESTATE_ZONE_BRUSH = 0x0040,
 	// Internal
 	TILESTATE_SELECTED = 0x0001,
 	TILESTATE_UNIQUE = 0x0002,
@@ -78,6 +80,7 @@ public: // Members
 	uint16_t statflags;
 	uint8_t minimapColor;
 	std::unique_ptr<InvalidZoneState> invalidZones;
+	std::vector<uint16_t> zoneIds;
 
 public:
 	// ALWAYS use this constructor if the Tile is EVER going to be placed on a map
@@ -241,6 +244,15 @@ public: // Functions
 	void unsetMapFlags(uint32_t _flags);
 	uint32_t getMapFlags() const;
 
+	void addZoneId(uint16_t zoneId);
+	void removeZoneId(uint16_t zoneId);
+	void clearZoneId();
+	void setZoneIds(const Tile* sourceTile);
+	const std::vector<uint16_t>& getZoneIds() const {
+		return zoneIds;
+	}
+	uint16_t getZoneId() const;
+
 	// Statflags (You really ought not to touch this)
 	void setStatFlags(uint16_t _flags);
 	void unsetStatFlags(uint16_t _flags);
@@ -331,6 +343,37 @@ inline void Tile::unsetStatFlags(uint16_t _flags) {
 
 inline uint16_t Tile::getStatFlags() const {
 	return statflags;
+}
+
+inline void Tile::addZoneId(uint16_t zoneId) {
+	if (std::find(zoneIds.begin(), zoneIds.end(), zoneId) == zoneIds.end()) {
+		zoneIds.push_back(zoneId);
+	}
+}
+
+inline void Tile::clearZoneId() {
+	zoneIds.clear();
+}
+
+inline void Tile::setZoneIds(const Tile* sourceTile) {
+	zoneIds.clear();
+	if (sourceTile) {
+		zoneIds.assign(sourceTile->getZoneIds().begin(), sourceTile->getZoneIds().end());
+	}
+}
+
+inline void Tile::removeZoneId(uint16_t zoneId) {
+	const auto itZone = std::find(zoneIds.begin(), zoneIds.end(), zoneId);
+	if (itZone != zoneIds.end()) {
+		zoneIds.erase(itZone);
+	}
+}
+
+inline uint16_t Tile::getZoneId() const {
+	if (zoneIds.empty()) {
+		return 0;
+	}
+	return zoneIds.front();
 }
 
 #endif

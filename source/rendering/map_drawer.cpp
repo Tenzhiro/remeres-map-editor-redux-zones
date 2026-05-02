@@ -63,6 +63,7 @@
 #include "rendering/drawers/overlays/door_indicator_drawer.h"
 #include "rendering/drawers/overlays/lua_overlay_drawer.h"
 #include "rendering/drawers/overlays/preview_drawer.h"
+#include "rendering/drawers/overlays/zone_label_drawer.h"
 #include "rendering/drawers/tiles/shade_drawer.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
 #include "rendering/io/screen_capture.h"
@@ -110,6 +111,7 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 	brush_overlay_drawer = std::make_unique<BrushOverlayDrawer>();
 	drag_shadow_drawer = std::make_unique<DragShadowDrawer>();
 	preview_drawer = std::make_unique<PreviewDrawer>();
+	zone_label_drawer = std::make_unique<ZoneLabelDrawer>();
 
 	shade_drawer = std::make_unique<ShadeDrawer>();
 
@@ -309,9 +311,6 @@ void MapDrawer::Draw() {
 	// Begin Batches
 	sprite_batch->begin(view.projectionMatrix, *atlas);
 	primitive_renderer->setProjectionMatrix(view.projectionMatrix);
-	if (options.isDrawLight()) {
-		light_buffer.Prepare(view);
-	}
 
 	// Check Framebuffer Logic
 	// Check Framebuffer Logic
@@ -328,6 +327,7 @@ void MapDrawer::Draw() {
 
 	// Save original view bounds before DrawMap modifies them per-floor
 	const ViewBounds original_bounds { view.start_x, view.start_y, view.end_x, view.end_y };
+	last_zone_label_bounds = original_bounds;
 
 	DrawMap();
 
@@ -335,17 +335,16 @@ void MapDrawer::Draw() {
 	sprite_batch->end(*atlas);
 	primitive_renderer->flush();
 
-	// If using FBO, resolve to screen BEFORE compositing lightmap
-	// (lightmap must composite onto the resolved scene, not an empty framebuffer)
+	if (options.isDrawLight()) {
+		DrawLight();
+	}
+
+	// If using FBO, we must now Resolve to Screen
 	if (use_fbo) {
 		DrawPostProcess(view, options);
 		// Reset to default FBO for overlays
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
-	}
-
-	if (options.isDrawLight()) {
-		DrawLight();
 	}
 
 	// Resume Batch for Overlays
@@ -358,7 +357,6 @@ void MapDrawer::Draw() {
 	live_cursor_drawer->draw(*sprite_batch, view, editor, options);
 
 	brush_overlay_drawer->draw(*sprite_batch, *primitive_renderer, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options, editor);
-	selection_drawer->draw(*primitive_renderer, view, canvas, options);
 
 	if (options.show_grid) {
 		DrawGrid(original_bounds);
@@ -386,23 +384,17 @@ void MapDrawer::DrawBackground() {
 void MapDrawer::DrawMap() {
 	bool live_client = editor.live_manager.IsClient();
 
+	bool only_colors = options.show_as_minimap || options.show_only_colors;
+
 	// Enable texture mode
 
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
-		if (options.isDrawLight() && options.draw_floor_shadow && view.end_z >= GROUND_LAYER + 1 && map_z == view.end_z) {
-			if (g_gui.gfx.ensureAtlasManager()) {
-				sprite_batch->drawRect(0.0f, 0.0f, view.screensize_x * view.zoom, view.screensize_y * view.zoom, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f), *g_gui.gfx.getAtlasManager());
-			}
-		}
-
-		if (!options.isDrawLight() && map_z == view.end_z && view.start_z != view.end_z) {
+		if (map_z == view.end_z && view.start_z != view.end_z) {
 			shade_drawer->draw(*sprite_batch, view, options);
 		}
 
 		if (map_z >= view.end_z) {
-			DrawMapLayer(*sprite_batch, map_z, live_client);
-		} else if (options.isDrawLight()) {
-			DrawMapLayer(hidden_floor_light_batch, map_z, live_client, true);
+			DrawMapLayer(map_z, live_client);
 		}
 
 		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
@@ -440,12 +432,18 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
 	creature_name_drawer->draw(vg, view);
 }
 
-void MapDrawer::DrawMapLayer(SpriteBatch& batch, int map_z, bool live_client, bool light_collection_only) {
-	map_layer_drawer->Draw(batch, map_z, live_client, view, options, light_buffer, light_collection_only);
+void MapDrawer::DrawZoneLabels(NVGcontext* vg) {
+	if (zone_label_drawer) {
+		zone_label_drawer->draw(vg, view, editor, options, last_zone_label_bounds);
+	}
+}
+
+void MapDrawer::DrawMapLayer(int map_z, bool live_client) {
+	map_layer_drawer->Draw(*sprite_batch, map_z, live_client, view, options, light_buffer);
 }
 
 void MapDrawer::DrawLight() {
-	light_drawer->draw(view, light_buffer, options);
+	light_drawer->draw(view, options.experimental_fog, light_buffer, options.global_light_color, options.light_intensity, options.ambient_light_level);
 }
 
 void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {

@@ -61,7 +61,7 @@ void KeyboardHandler::OnKeyDown(MapCanvas* canvas, wxKeyEvent& event) {
 		case WXK_SPACE: {
 			if (event.ControlDown()) {
 				g_gui.FillDoodadPreviewBuffer();
-				canvas->RequestLocalRefresh();
+				g_gui.RefreshView();
 			} else {
 				g_gui.SwitchMode();
 			}
@@ -77,7 +77,7 @@ void KeyboardHandler::OnKeyDown(MapCanvas* canvas, wxKeyEvent& event) {
 		}
 		case WXK_DELETE: {
 			canvas->editor.destroySelection();
-			canvas->RequestSharedMapRefresh();
+			g_gui.RefreshView();
 			break;
 		}
 		case 'z':
@@ -144,7 +144,7 @@ void KeyboardHandler::HandleBrushSizeChange(MapCanvas* canvas, int keycode) {
 	} else {
 		g_gui.DecreaseBrushSize();
 	}
-	canvas->RequestLocalRefresh();
+	canvas->Refresh();
 }
 
 void KeyboardHandler::HandleBrushVariation(MapCanvas* canvas, int keycode) {
@@ -161,7 +161,7 @@ void KeyboardHandler::HandleBrushVariation(MapCanvas* canvas, int keycode) {
 		}
 	}
 	g_gui.SetBrushVariation(nv);
-	canvas->RequestLocalRefresh();
+	g_gui.RefreshView();
 }
 
 void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
@@ -193,7 +193,7 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 			static_cast<MapWindow*>(canvas->GetParent())->SetScreenCenterPosition(hk.GetPosition());
 
 			g_gui.SetStatusText("Used hotkey " + i2ws(index));
-			canvas->RequestLocalRefresh();
+			g_gui.RefreshView();
 		} else if (hk.IsBrush()) {
 			g_gui.SetDrawingMode();
 
@@ -210,7 +210,7 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 			}
 
 			g_gui.SetStatusText("Used hotkey " + i2ws(index));
-			canvas->RequestLocalRefresh();
+			g_gui.RefreshView();
 		} else {
 			g_gui.SetStatusText("Unassigned hotkey " + i2ws(index));
 		}

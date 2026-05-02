@@ -34,7 +34,7 @@ void ZoomController::SetZoom(MapCanvas* canvas, double value) {
 		canvas->UpdatePositionStatus();
 		UpdateStatus(canvas);
 		g_gui.UpdateMinimap(true);
-		canvas->RequestLocalRefresh();
+		canvas->Refresh();
 	}
 }
 
@@ -63,7 +63,7 @@ void ZoomController::ApplyRelativeZoom(MapCanvas* canvas, double diff) {
 
 	static_cast<MapWindow*>(canvas->GetParent())->ResumeMinimapTrackingToCurrentView();
 	static_cast<MapWindow*>(canvas->GetParent())->ScrollRelative(-scroll_x, -scroll_y, true);
-	canvas->RequestLocalRefresh();
+	canvas->Refresh();
 }
 
 void ZoomController::UpdateStatus(MapCanvas* canvas) {

@@ -7,6 +7,8 @@
 #include "ui/tile_properties/map_flags_panel.h"
 #include "map/tile.h"
 #include "map/map.h"
+
+#include <format>
 #include "editor/editor.h"
 #include "editor/action.h"
 #include "editor/action_queue.h"
@@ -26,6 +28,9 @@ MapFlagsPanel::MapFlagsPanel(wxWindow* parent) :
 	sizer->Add(chk_nopvp, wxSizerFlags(0).Left().Border(wxALL, 2));
 	sizer->Add(chk_nologout, wxSizerFlags(0).Left().Border(wxALL, 2));
 	sizer->Add(chk_pvpzone, wxSizerFlags(0).Left().Border(wxALL, 2));
+
+	zone_ids_label = newd wxStaticText(sizer->GetStaticBox(), wxID_ANY, "Gameplay zone IDs:  —");
+	sizer->Add(zone_ids_label, wxSizerFlags(0).Left().Border(wxALL, 2));
 
 	SetSizer(sizer);
 
@@ -48,20 +53,37 @@ void MapFlagsPanel::SetTile(Tile* tile, Map* map) {
 		chk_nologout->SetValue(tile->getMapFlags() & TILESTATE_NOLOGOUT);
 		chk_pvpzone->SetValue(tile->getMapFlags() & TILESTATE_PVPZONE);
 
+		if (!tile->getZoneIds().empty()) {
+			std::string z = "Gameplay zone IDs: ";
+			for (size_t i = 0; i < tile->getZoneIds().size(); ++i) {
+				if (i != 0) {
+					z += ", ";
+				}
+				z += std::format("{}", tile->getZoneIds()[i]);
+			}
+			zone_ids_label->SetLabel(wxString::FromUTF8(z));
+		} else {
+			zone_ids_label->SetLabel("Gameplay zone IDs:  —");
+		}
+
 		chk_pz->Enable(true);
 		chk_nopvp->Enable(true);
 		chk_nologout->Enable(true);
 		chk_pvpzone->Enable(true);
+		zone_ids_label->Enable(true);
 	} else {
 		chk_pz->SetValue(false);
 		chk_nopvp->SetValue(false);
 		chk_nologout->SetValue(false);
 		chk_pvpzone->SetValue(false);
 
+		zone_ids_label->SetLabel("Gameplay zone IDs:  —");
+
 		chk_pz->Enable(false);
 		chk_nopvp->Enable(false);
 		chk_nologout->Enable(false);
 		chk_pvpzone->Enable(false);
+		zone_ids_label->Enable(false);
 	}
 }
 

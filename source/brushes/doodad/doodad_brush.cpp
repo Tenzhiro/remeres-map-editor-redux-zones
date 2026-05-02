@@ -7,6 +7,7 @@
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/doodad/doodad_brush_loader.h"
 #include "map/basemap.h"
+#include "map/tile.h"
 #include "game/item.h"
 
 //=============================================================================
@@ -92,6 +93,9 @@ void DoodadBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	if (settings.clear_mapflags || settings.clear_statflags) {
 		tile->setMapFlags(tile->getMapFlags() & (~settings.clear_mapflags));
 		tile->setStatFlags(tile->getStatFlags() & (~settings.clear_statflags));
+		if (settings.clear_mapflags & TILESTATE_ZONE_BRUSH) {
+			tile->clearZoneId();
+		}
 	}
 }
 

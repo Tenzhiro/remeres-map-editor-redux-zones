@@ -6,7 +6,6 @@
 #include <string>
 #include <optional>
 #include "map/position.h"
-#include "rendering/core/sprite_light.h"
 
 struct DrawingOptions {
 	DrawingOptions();
@@ -38,6 +37,7 @@ struct DrawingOptions {
 	bool show_houses;
 	bool show_shade;
 	bool show_special_tiles;
+	bool show_zone_areas;
 	bool show_items;
 
 	bool highlight_items;
@@ -55,11 +55,12 @@ struct DrawingOptions {
 	bool always_show_zones;
 	bool extended_house_shader;
 
-	bool draw_floor_shadow;
+	bool experimental_fog;
 
 	uint32_t current_house_id;
-	SpriteLight server_light;
-	float minimum_ambient_light;
+	wxColor global_light_color;
+	float light_intensity;
+	float ambient_light_level;
 	float highlight_pulse;
 
 	bool anti_aliasing;

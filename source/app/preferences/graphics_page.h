@@ -29,7 +29,7 @@ private:
 
 	wxDirPickerCtrl* screenshot_directory_picker = nullptr;
 
-	wxChoice* vsync_choice = nullptr;
+	wxSpinCtrl* fps_limit_spin = nullptr;
 	wxCheckBox* show_fps_chkbox = nullptr;
 };
 

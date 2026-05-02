@@ -210,6 +210,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/lua_overlay_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/marker_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/preview_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/zone_label_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/selection_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/floor_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/shade_drawer.h
@@ -305,7 +306,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/search_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/welcome_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/gl_context_manager.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/managers/vsync_policy.h
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/theme.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_frame.h
@@ -583,6 +583,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/lua_overlay_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/marker_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/preview_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/zone_label_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/selection_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/floor_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/shade_drawer.cpp
@@ -694,7 +695,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/search_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/welcome_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/gl_context_manager.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/managers/vsync_policy.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_popup_menu.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_tab.cpp

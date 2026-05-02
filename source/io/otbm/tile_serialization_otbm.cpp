@@ -19,7 +19,8 @@ namespace {
 		TILESTATE_NOPVP |
 		TILESTATE_NOLOGOUT |
 		TILESTATE_PVPZONE |
-		TILESTATE_REFRESH;
+		TILESTATE_REFRESH |
+		TILESTATE_ZONE_BRUSH;
 
 	uint16_t decodeServerIdFromInlineBytes(const std::vector<uint8_t>& rawBytes) {
 		if (rawBytes.size() < 3) {
@@ -151,6 +152,17 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 					uint32_t flags = 0;
 					if (tileNode->getU32(flags)) {
 						tile->setMapFlags(flags);
+						if (flags & TILESTATE_ZONE_BRUSH) {
+							uint16_t zoneId = 0;
+							do {
+								if (!tileNode->getU16(zoneId)) {
+									break;
+								}
+								if (zoneId != 0) {
+									tile->addZoneId(zoneId);
+								}
+							} while (zoneId != 0);
+						}
 						const uint32_t unknownBits = flags & ~KNOWN_TILE_FLAG_MASK;
 						if (unknownBits != 0) {
 							tile->recordUnknownMapFlags(flags, unknownBits);
@@ -320,6 +332,12 @@ void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, const Tile* sa
 	if (save_tile->getMapFlags()) {
 		f.addU8(OTBM_ATTR_TILE_FLAGS);
 		f.addU32(save_tile->getMapFlags());
+		if (save_tile->getMapFlags() & TILESTATE_ZONE_BRUSH) {
+			for (const uint16_t zid : save_tile->getZoneIds()) {
+				f.addU16(zid);
+			}
+			f.addU16(0);
+		}
 	}
 
 	if (save_tile->ground) {

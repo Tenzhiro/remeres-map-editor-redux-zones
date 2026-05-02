@@ -202,6 +202,22 @@ BrowseTileWindow::BrowseTileWindow(wxWindow* parent, Tile* tile, wxPoint positio
 	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No PvP:  " + b2yn(tile->getMapFlags() & TILESTATE_NOPVP)), wxSizerFlags(0).Left());
 	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No logout:  " + b2yn(tile->getMapFlags() & TILESTATE_NOLOGOUT)), wxSizerFlags(0).Left());
 	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "PvP zone:  " + b2yn(tile->getMapFlags() & TILESTATE_PVPZONE)), wxSizerFlags(0).Left());
+	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Zone brush (OTBM):  " + b2yn(tile->getMapFlags() & TILESTATE_ZONE_BRUSH)), wxSizerFlags(0).Left());
+	{
+		const auto& zids = tile->getZoneIds();
+		wxString zoneLine = "Gameplay zone IDs:  ";
+		if (zids.empty()) {
+			zoneLine += "—";
+		} else {
+			for (size_t i = 0; i < zids.size(); ++i) {
+				if (i != 0) {
+					zoneLine += ", ";
+				}
+				zoneLine += wxString::FromUTF8(std::format("{}", zids[i]));
+			}
+		}
+		infoSizer->Add(newd wxStaticText(this, wxID_ANY, zoneLine), wxSizerFlags(0).Left());
+	}
 	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "House:  " + b2yn(tile->isHouseTile())), wxSizerFlags(0).Left());
 
 	sizer->Add(infoSizer, wxSizerFlags(0).Left().DoubleBorder());

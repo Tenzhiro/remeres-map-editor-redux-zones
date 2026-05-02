@@ -131,6 +131,7 @@ namespace TileOperations {
 		copy->statflags = tile->statflags;
 		copy->minimapColor = tile->minimapColor;
 		copy->house_id = tile->house_id;
+		copy->setZoneIds(tile);
 		if (tile->invalidZones) {
 			copy->invalidZones = std::make_unique<InvalidZoneState>(*tile->invalidZones);
 		}
@@ -159,6 +160,9 @@ namespace TileOperations {
 		}
 		if (src->house_id) {
 			dest->house_id = src->house_id;
+		}
+		if (!src->getZoneIds().empty()) {
+			dest->setZoneIds(src);
 		}
 
 		if (src->ground) {

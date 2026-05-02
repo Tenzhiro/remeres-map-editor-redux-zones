@@ -4,7 +4,99 @@
 #include "game/item.h"
 #include "rendering/core/drawing_options.h"
 #include "app/definitions.h"
+#include <algorithm>
 #include <array>
+#include <cmath>
+#include <vector>
+
+namespace {
+
+	void HsvToRgb(float h, float s, float v, uint8_t& r, uint8_t& g, uint8_t& b) {
+		if (h < 0.f) {
+			h += 360.f;
+		}
+		if (h >= 360.f) {
+			h = std::fmod(h, 360.f);
+		}
+		const float c = v * s;
+		const float x = c * (1.f - std::fabs(std::fmod(h / 60.f, 2.f) - 1.f));
+		const float m = v - c;
+		float rp = 0.f, gp = 0.f, bp = 0.f;
+		if (h < 60.f) {
+			rp = c;
+			gp = x;
+		} else if (h < 120.f) {
+			rp = x;
+			gp = c;
+		} else if (h < 180.f) {
+			gp = c;
+			bp = x;
+		} else if (h < 240.f) {
+			gp = x;
+			bp = c;
+		} else if (h < 300.f) {
+			rp = x;
+			bp = c;
+		} else {
+			rp = c;
+			gp = x;
+		}
+		r = static_cast<uint8_t>(std::clamp(static_cast<int>(std::lround((rp + m) * 255.f)), 0, 255));
+		g = static_cast<uint8_t>(std::clamp(static_cast<int>(std::lround((gp + m) * 255.f)), 0, 255));
+		b = static_cast<uint8_t>(std::clamp(static_cast<int>(std::lround((bp + m) * 255.f)), 0, 255));
+	}
+
+	// Golden-angle hue so nearby ids differ clearly; strong S/V for editor visibility.
+	void ZoneIdToRgb(uint16_t id, uint8_t& r, uint8_t& g, uint8_t& b) {
+		const float h = std::fmod(static_cast<float>(id) * 137.508f, 360.f);
+		const float s = 0.80f;
+		const float v = 0.58f;
+		HsvToRgb(h, s, v, r, g, b);
+	}
+
+} // namespace
+
+void TileColorCalculator::BlendGameplayZoneTint(uint8_t& r, uint8_t& g, uint8_t& b, const std::vector<uint16_t>& zoneIds) {
+	if (zoneIds.empty()) {
+		return;
+	}
+
+	std::vector<uint16_t> ids = zoneIds;
+	std::sort(ids.begin(), ids.end());
+	ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+
+	const size_t n = ids.size();
+	uint8_t tr = 255;
+	uint8_t tg = 255;
+	uint8_t tb = 255;
+
+	if (n >= 3) {
+		// Many overlaps → bright neutral (readable “collision” read)
+		tr = 252;
+		tg = 250;
+		tb = 255;
+	} else if (n == 2) {
+		uint8_t r1 = 0;
+		uint8_t g1 = 0;
+		uint8_t b1 = 0;
+		uint8_t r2 = 0;
+		uint8_t g2 = 0;
+		uint8_t b2 = 0;
+		ZoneIdToRgb(ids[0], r1, g1, b1);
+		ZoneIdToRgb(ids[1], r2, g2, b2);
+		tr = static_cast<uint8_t>((static_cast<uint16_t>(r1) + static_cast<uint16_t>(r2)) / 2u);
+		tg = static_cast<uint8_t>((static_cast<uint16_t>(g1) + static_cast<uint16_t>(g2)) / 2u);
+		tb = static_cast<uint8_t>((static_cast<uint16_t>(b1) + static_cast<uint16_t>(b2)) / 2u);
+	} else {
+		ZoneIdToRgb(ids[0], tr, tg, tb);
+	}
+
+	// Blend toward tint so tile art stays visible (semi-transparent overlay effect).
+	constexpr int kBlend = 118;
+	r = static_cast<uint8_t>((static_cast<int>(r) * (255 - kBlend) + static_cast<int>(tr) * kBlend) / 255);
+	g = static_cast<uint8_t>((static_cast<int>(g) * (255 - kBlend) + static_cast<int>(tg) * kBlend) / 255);
+	b = static_cast<uint8_t>((static_cast<int>(b) * (255 - kBlend) + static_cast<int>(tb) * kBlend) / 255);
+}
 
 void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& options, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b) {
 	bool showspecial = options.show_only_colors || options.show_special_tiles;
@@ -76,6 +168,10 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 
 	if (showspecial && tile->getMapFlags() & TILESTATE_NOPVP) {
 		g >>= 1;
+	}
+
+	if (options.show_zone_areas && (tile->getMapFlags() & TILESTATE_ZONE_BRUSH) && !tile->getZoneIds().empty()) {
+		BlendGameplayZoneTint(r, g, b, tile->getZoneIds());
 	}
 }
 

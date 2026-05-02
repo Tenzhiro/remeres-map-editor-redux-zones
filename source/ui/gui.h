@@ -234,13 +234,11 @@ public:
 	// Additional brush parameters
 	void SetSpawnTime(int time);
 
-	void SetLightIntensity(int v);
-	int GetLightIntensity() const;
+	void SetLightIntensity(float v);
+	float GetLightIntensity() const;
 
 	void SetAmbientLightLevel(float v);
 	float GetAmbientLightLevel() const;
-	void SetServerLightColor(int v);
-	int GetServerLightColor() const;
 	void SetBrushSize(int nz);
 	void SetBrushSizeInternal(int nz);
 	void SetBrushSizeX(int nz);
@@ -262,10 +260,8 @@ public:
 
 	// Centers current view on position
 	void SetScreenCenterPosition(Position pos);
-	void SetCurrentMapSecondaryMap(BaseMap* secondary_map);
 	// Refresh the view canvas
-	void RefreshView(bool immediate = false);
-	void SyncCurrentMapCanvasPreviewState();
+	void RefreshView();
 	// Fit all/specified current map view to map dimensions
 	void FitViewToMap();
 	void FitViewToMap(MapTab* mt);
