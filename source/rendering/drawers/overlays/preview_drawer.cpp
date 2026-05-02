@@ -1,0 +1,148 @@
+#include "app/main.h"
+
+// glut include removed
+
+#include "rendering/drawers/overlays/preview_drawer.h"
+#include "rendering/core/sprite_batch.h"
+#include "rendering/core/primitive_renderer.h"
+#include "rendering/ui/map_display.h"
+#include "rendering/drawers/entities/item_drawer.h"
+#include "rendering/drawers/entities/creature_drawer.h"
+#include "ui/gui.h"
+#include "brushes/brush.h"
+#include "editor/copybuffer.h"
+#include "editor/editor.h"
+#include "ui/map_tab.h"
+
+PreviewDrawer::PreviewDrawer() {
+}
+
+PreviewDrawer::~PreviewDrawer() {
+}
+
+void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const RenderView& view, int map_z, const DrawingOptions& options, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id) {
+	MapTab* mapTab = dynamic_cast<MapTab*>(canvas->GetMapWindow());
+	BaseMap* secondary_map = mapTab ? mapTab->GetSession()->secondary_map : nullptr;
+
+	if (secondary_map != nullptr && !options.ingame) {
+		Brush* brush = g_gui.GetCurrentBrush();
+
+		Position normalPos;
+		Position to(view.mouse_map_x, view.mouse_map_y, view.floor);
+
+		if (canvas->isPasting()) {
+			normalPos = editor.copybuffer.getPosition();
+		} else if (brush && brush->is<DoodadBrush>()) {
+			normalPos = Position(0x8000, 0x8000, 0x8);
+		} else {
+			normalPos = to;
+		}
+
+		for (int map_x = view.start_x; map_x <= view.end_x; map_x++) {
+			for (int map_y = view.start_y; map_y <= view.end_y; map_y++) {
+				Position final(map_x, map_y, map_z);
+				Position pos = normalPos + final - to;
+
+				if (pos.z >= MAP_LAYERS || pos.z < 0) {
+					continue;
+				}
+
+				Tile* tile = secondary_map->getTile(pos);
+				if (tile) {
+					// Compensate for underground/overground
+					int offset;
+					if (map_z <= GROUND_LAYER) {
+						offset = (GROUND_LAYER - map_z) * TILE_SIZE;
+					} else {
+						offset = TILE_SIZE * (view.floor - map_z);
+					}
+
+					int draw_x = ((map_x * TILE_SIZE) - view.view_scroll_x) - offset;
+					int draw_y = ((map_y * TILE_SIZE) - view.view_scroll_y) - offset;
+
+					// Draw ground
+					uint8_t r = 255, g = 255, b = 255;
+					uint8_t base_alpha = canvas->isPasting() ? 128 : 255;
+
+					if (tile->ground) {
+						if (tile->isBlocking() && options.show_blocking) {
+							g = g / 3 * 2;
+							b = b / 3 * 2;
+						}
+						if (tile->isHouseTile() && options.show_houses) {
+							if ((int)tile->getHouseID() == current_house_id) {
+								r /= 2;
+							} else {
+								r /= 2;
+								g /= 2;
+							}
+						} else if (options.show_special_tiles && tile->isPZ()) {
+							r /= 2;
+							b /= 2;
+						}
+						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_PVPZONE) {
+							r = r / 3 * 2;
+							b = r / 3 * 2;
+						}
+						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
+							b /= 2;
+						}
+						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOPVP) {
+							g /= 2;
+						}
+						if (tile->ground) {
+							BlitItemParams params(tile, tile->ground.get(), options);
+							params.ephemeral = true;
+							params.red = r;
+							params.green = g;
+							params.blue = b;
+							params.alpha = base_alpha;
+							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						}
+					}
+
+					// Draw items on the tile
+					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
+						for (const auto& item : tile->items) {
+							BlitItemParams params(tile, item.get(), options);
+							params.ephemeral = true;
+							params.alpha = base_alpha;
+							if (item->isBorder()) {
+								params.red = 255;
+								params.green = r;
+								params.blue = g;
+								params.alpha = (base_alpha == 255) ? b : base_alpha;
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+							} else {
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+							}
+						}
+						if (tile->creature && options.show_creatures) {
+							creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
+						}
+					}
+				}
+			}
+		}
+		// Draw highlight on the specific tile under mouse
+		// This helps user see where they are pointing in the "chaos"
+		Position mousePos(view.mouse_map_x, view.mouse_map_y, view.floor);
+		if (mousePos.z == map_z) {
+			// Use correct offset logic
+			int offset;
+			if (map_z <= GROUND_LAYER) {
+				offset = (GROUND_LAYER - map_z) * TILE_SIZE;
+			} else {
+				offset = TILE_SIZE * (view.floor - map_z);
+			}
+			int draw_x = ((mousePos.x * TILE_SIZE) - view.view_scroll_x) - offset;
+			int draw_y = ((mousePos.y * TILE_SIZE) - view.view_scroll_y) - offset;
+
+			if (g_gui.gfx.ensureAtlasManager()) {
+				// Draw a semi-transparent white box over the tile
+				glm::vec4 highlightColor(1.0f, 1.0f, 1.0f, 0.25f); // 25% white
+				sprite_batch.drawRect((float)draw_x, (float)draw_y, (float)TILE_SIZE, (float)TILE_SIZE, highlightColor, *g_gui.gfx.getAtlasManager());
+			}
+		}
+	}
+}

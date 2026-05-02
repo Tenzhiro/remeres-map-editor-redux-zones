@@ -1,0 +1,132 @@
+# ============================================================
+#  Build outputs
+# ============================================================
+build/
+build.*/
+build-debug/
+build-release/
+build_conan/
+linux_build/
+build.log
+build_script.log
+build_output*.txt
+
+# ============================================================
+#  CMake
+# ============================================================
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CMakeLists.txt.user*
+CMakeUserPresets.json
+Makefile
+
+# ============================================================
+#  vcproj (generated VS solution)
+# ============================================================
+vcproj/*
+!vcproj/generate_vcproj.bat
+
+# ============================================================
+#  vcpkg
+# ============================================================
+/vcpkg_installed/
+
+# ============================================================
+#  Visual Studio / MSBuild
+# ============================================================
+*.obj
+*.pdb
+*.ilk
+*.user
+*.aps
+*.opensdf
+*.sdf
+*.suo
+*.db
+*.opendb
+.vs/
+
+# ============================================================
+#  Binaries
+# ============================================================
+*.exe
+*.dll
+
+# ============================================================
+#  Xcode / macOS
+# ============================================================
+xcuserdata/
+.DS_Store
+
+# ============================================================
+#  JetBrains (CLion, Rider)
+# ============================================================
+.idea/
+cmake-build-*/
+
+# ============================================================
+#  VS Code
+# ============================================================
+.vscode/
+
+# ============================================================
+#  Editor temp files
+# ============================================================
+*.bak
+*.swp
+*~
+
+# ============================================================
+#  AI / agent config
+# ============================================================
+.gemini/
+.qwen/
+.agent/
+/.agent/rules
+.codex/local.toml
+.codex/*.local.toml
+gha-creds-*.json
+
+# ============================================================
+#  Local History (VS Code extension)
+# ============================================================
+/.history/
+
+# ============================================================
+#  Project-specific ignores
+# ============================================================
+# RME runtime config & user data
+rme
+rme.cfg
+data/user/
+
+# Tibia asset files (not shipped in repo)
+*.spr
+*.dat
+*.MAP
+
+# External / experimental directories
+/ext/nanovg/example/
+/ImguiMapEditor/
+/legacy/
+/MapViewerClient/
+/Assets Editor/
+/mappingtool/
+/test_iterator_mock/
+/test_selection_mock/
+/test_variant_logic/
+/.agents/rules
+/build-ninja
+compile_commands.json
+/.cache
+/build_clang
+/data/1098_test
+/data/1098dat
+/data/1098
+/data/canary
+/data — kopia
+/assets
+/build-ninja-codex/vcpkg_installed
+/build-ninja-codex
+
